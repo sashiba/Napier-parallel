@@ -1,36 +1,32 @@
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.math.*;
 
 public class TaskRunner {
 
 	public static void main(String[] args) {
-		/* 	Програмата извежда подходящи съобщения на различните етапи от работата си, както и 
-			времето отделено за изчисление и резултата от изчислението (стойността на  e);
-			Примери за подходящи съобщения:
-			„Thread-<num> started.“,„Thread-<num> stopped.“,„Thread-<num> execution time was (millis): <num>“,
-			„Threads used in current run: <num>“,„Total execution time for current run (millis): <num>“ и т.н.;
-			(o)  Записва  резултата  от  работа  си  (стойността  на e) във изходен файл, зададен с подходящ
-			параметър, например  “-o result.txt”. Ако този параметър е изпуснат, се избира име по подразбиране;
-			(o) Да се осигури възможност за „quiet“ режим на работа на програмата, при който се извежда
-			само времето отделено за изчисление на e , отново чрез подходящо избран друг команден параметър –
-			например “-q”;
-		
-		*/
+
 		int precision = 1500;
 		int tasks = 1;
 		boolean quiet = false;
 		String file_name = "result.txt";
 		
-		for (int i = 0; i< args.length; i++){
-			switch(args[i]){
-			case "-p": precision = Integer.parseInt(args[i+1]);
-				break;
-			case "-t": case "-tasks": tasks = Integer.parseInt(args[i+1]);
-				break;
-			case "-q": quiet = true;
-				break;
-			case "-o": file_name = args[i+1];
-				break;		
+		try {
+			for (int i = 0; i< args.length; i++){
+				switch(args[i]){
+				case "-p": precision = Integer.parseInt(args[i+1]);
+					break;
+				case "-t": case "-tasks": tasks = Integer.parseInt(args[i+1]);
+					break;
+				case "-q": quiet = true;
+					break;
+				case "-o": file_name = args[i+1];
+					break;
+				}
 			}
+		} catch(RuntimeException e){
+			System.out.println("Invalid arguments.");
+			System.exit(1);
 		}
 		
 		long startTime = System.currentTimeMillis();
@@ -38,12 +34,12 @@ public class TaskRunner {
 		int p_digits = precision;
 		int thread_count = tasks;
 		int chunk_size = p_digits / thread_count;
-		BigDecimal a[] = new BigDecimal[p_digits];
+		
 		BigDecimal res[] = new BigDecimal[thread_count];
 		Thread tr[] = new Thread[thread_count];
 		
 		for(int i = 0; i < thread_count; i++) {
-			Napier r = new Napier(a, res, chunk_size, i, thread_count);
+			Napier r = new Napier(res, chunk_size, i, thread_count, quiet);
 			Thread t = new Thread(r);
 			tr[i] = t;
 			t.start();
@@ -62,7 +58,17 @@ public class TaskRunner {
 		
 		long stopTime = System.currentTimeMillis();
 		long elapsedTime = stopTime - startTime;
-		System.out.println("result: " + sum);
-		System.out.println(elapsedTime + "ms");
+		
+		if (!quiet){
+			System.out.println("Threads used in current run: " + thread_count);
+		}
+		
+		try (PrintStream file = new PrintStream(file_name)) {
+			file.println(sum);
+		} catch (FileNotFoundException fnf) {
+			System.out.println("File " + file_name + " not found.");
+		}
+		
+		System.out.println("Total execution time for current run: " + elapsedTime + "ms");
 	}
 }
