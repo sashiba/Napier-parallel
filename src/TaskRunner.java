@@ -11,6 +11,8 @@ public class TaskRunner {
 		boolean quiet = false;
 		String file_name = "result.txt";
 		
+		long startTime = System.currentTimeMillis();
+		
 		try {
 			for (int i = 0; i< args.length; i++){
 				switch(args[i]){
@@ -29,7 +31,6 @@ public class TaskRunner {
 			System.exit(1);
 		}
 		
-		long startTime = System.currentTimeMillis();
 		
 		int p_digits = precision;
 		int thread_count = tasks;
